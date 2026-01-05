@@ -33,6 +33,9 @@ export interface SubscriptionDetails {
   subscription_id: string;
   status: string;
   product_id: string;
+  product_title: string;
+  current_period_end: number;
+  billing_interval: string;
 }
 
 export interface SubscriptionCheckResponse {
