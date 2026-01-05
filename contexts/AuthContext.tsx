@@ -17,8 +17,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const WHITELISTED_EMAILS = [
-  'admin@example.com',
-  'test@example.com',
+  'dallas@theaisurfer.com',
+  'michelle@theaisurfer.com',
+  'matt@theaisurfer.com'
 ];
 
 const isWhitelistedEmail = (email: string): boolean => {
