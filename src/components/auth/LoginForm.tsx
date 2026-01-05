@@ -104,7 +104,7 @@ export function LoginForm() {
               to="/signup"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              Don't have an account? Sign up
+              Don't have an account? Sign ups
             </Link>
           </div>
         </form>
