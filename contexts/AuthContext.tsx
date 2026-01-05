@@ -8,6 +8,7 @@ interface AuthContextType {
   profile: Profile | null;
   session: Session | null;
   loading: boolean;
+  subscriptionCheckInProgress: boolean;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null; subscriptionDenied?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; subscriptionDenied?: boolean }>;
   signOut: () => Promise<void>;
@@ -21,6 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscriptionCheckInProgress, setSubscriptionCheckInProgress] = useState(false);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -32,23 +34,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user?.email) {
+        const subscriptionCheck = await checkSubscription(session.user.email);
+        if (!subscriptionCheck.allowed) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+        setSession(session);
+        setUser(session.user);
+        await fetchProfile(session.user.id);
+      } else {
+        setSession(null);
+        setUser(null);
       }
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        (async () => {
-          await fetchProfile(session.user.id);
-        })();
-      } else {
+      if (!session?.user) {
+        setSession(null);
+        setUser(null);
         setProfile(null);
       }
     });
@@ -124,19 +134,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
+    setSubscriptionCheckInProgress(true);
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) return { error };
+    if (error) {
+      setSubscriptionCheckInProgress(false);
+      return { error };
+    }
 
     if (data.user?.email) {
       const subscriptionCheck = await checkSubscription(data.user.email);
 
       if (!subscriptionCheck.allowed) {
         await supabase.auth.signOut();
+        setSubscriptionCheckInProgress(false);
         return { error: null, subscriptionDenied: true };
       }
+
+      setSession(data.session);
+      setUser(data.user);
+      await fetchProfile(data.user.id);
     }
 
+    setSubscriptionCheckInProgress(false);
     return { error: null };
   };
 
@@ -146,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, session, loading, signUp, signIn, signOut, checkSubscription }}>
+    <AuthContext.Provider value={{ user, profile, session, loading, subscriptionCheckInProgress, signUp, signIn, signOut, checkSubscription }}>
       {children}
     </AuthContext.Provider>
   );

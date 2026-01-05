@@ -9,11 +9,10 @@ export const RetroLoginScreen: React.FC = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [bootSequence, setBootSequence] = useState(true);
   const [bootText, setBootText] = useState<string[]>([]);
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, subscriptionCheckInProgress } = useAuth();
 
   const bootMessages = [
     'SURFOS BIOS v1.0',
@@ -49,13 +48,11 @@ export const RetroLoginScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
     if (isLogin) {
       const { error, subscriptionDenied } = await signIn(email, password);
       if (subscriptionDenied) {
         setSubscriptionBlocked(true);
-        setLoading(false);
         return;
       }
       if (error) {
@@ -64,20 +61,17 @@ export const RetroLoginScreen: React.FC = () => {
     } else {
       if (!firstName.trim() || !lastName.trim()) {
         setError('First and last name are required');
-        setLoading(false);
         return;
       }
       const { error, subscriptionDenied } = await signUp(email, password, firstName.trim(), lastName.trim());
       if (subscriptionDenied) {
         setSubscriptionBlocked(true);
-        setLoading(false);
         return;
       }
       if (error) {
         setError(error.message);
       }
     }
-    setLoading(false);
   };
 
   if (subscriptionBlocked) {
@@ -225,14 +219,14 @@ export const RetroLoginScreen: React.FC = () => {
 
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={subscriptionCheckInProgress}
                     className="w-full py-3 bg-gradient-to-r from-teal-500 to-ocean-500 hover:from-teal-400 hover:to-ocean-400 text-white font-bold rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40"
                     style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
                   >
-                    {loading ? (
+                    {subscriptionCheckInProgress ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        PROCESSING...
+                        VERIFYING SUBSCRIPTION...
                       </span>
                     ) : (
                       isLogin ? 'ACCESS SYSTEM' : 'CREATE ACCOUNT'
