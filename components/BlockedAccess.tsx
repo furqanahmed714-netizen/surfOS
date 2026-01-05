@@ -75,19 +75,11 @@ export const BlockedAccess: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <a
-                  href="https://billing.stripe.com/p/login"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-3 px-4 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/50 text-teal-300 font-semibold rounded transition-all text-center"
-                >
-                  Manage Subscription
-                </a>
                 <button
                   onClick={() => window.location.reload()}
                   className="flex-1 py-3 px-4 bg-[#161b22] hover:bg-[#1c2128] border border-[#30363d] text-[#8b949e] hover:text-white font-semibold rounded transition-all"
                 >
-                  Retry Access
+                  Go Back
                 </button>
               </div>
             </div>
