@@ -56,7 +56,7 @@ export const RetroLoginScreen: React.FC = () => {
       
       if (subscriptionDenied) {
         setSubscriptionBlocked(true);
-        console.log(error,subscriptionDenied);
+        console.log(error,subscriptionDenied + 1);
         setLoading(false);
         return;
       }
