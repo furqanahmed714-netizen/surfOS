@@ -69,16 +69,18 @@ const ICONS = {
 };
 
 const Desktop: React.FC = () => {
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut, subscriptionCheckInProgress } = useAuth();
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [topZIndex, setTopZIndex] = useState(100);
 
-  if (loading) {
+  if (loading || subscriptionCheckInProgress) {
     return (
       <div className="fixed inset-0 bg-[#1a1a2e] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-teal-400 font-mono text-sm">Loading SurfOS...</p>
+          <p className="text-teal-400 font-mono text-sm">
+            {subscriptionCheckInProgress ? 'Verifying subscription...' : 'Loading SurfOS...'}
+          </p>
         </div>
       </div>
     );
