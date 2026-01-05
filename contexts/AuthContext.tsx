@@ -124,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log(data.user.email);
      const subscriptionCheck = await checkSubscription(data.user.email);
 
       if (!subscriptionCheck.allowed) {
