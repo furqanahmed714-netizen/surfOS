@@ -8,6 +8,7 @@ interface AuthContextType {
   profile: Profile | null;
   session: Session | null;
   loading: boolean;
+  subscriptionStatus: 'loading' | 'active' | 'inactive' | 'unchecked';
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null; subscriptionDenied?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; subscriptionDenied?: boolean }>;
   signOut: () => Promise<void>;
@@ -21,6 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'loading' | 'active' | 'inactive' | 'unchecked'>('unchecked');
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -32,11 +34,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        await fetchProfile(session.user.id);
+        setSubscriptionStatus('loading');
+        const subscriptionCheck = await checkSubscription(session.user.email!);
+        setSubscriptionStatus(subscriptionCheck.allowed ? 'active' : 'inactive');
       }
       setLoading(false);
     });
@@ -47,9 +52,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         (async () => {
           await fetchProfile(session.user.id);
+          setSubscriptionStatus('loading');
+          const subscriptionCheck = await checkSubscription(session.user.email!);
+          setSubscriptionStatus(subscriptionCheck.allowed ? 'active' : 'inactive');
         })();
       } else {
         setProfile(null);
+        setSubscriptionStatus('unchecked');
       }
     });
 
@@ -58,9 +67,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const currentSession = await supabase.auth.getSession();
         if (currentSession.data.session?.user?.email) {
           const subscriptionCheck = await checkSubscription(currentSession.data.session.user.email);
+          setSubscriptionStatus(subscriptionCheck.allowed ? 'active' : 'inactive');
           if (!subscriptionCheck.allowed) {
             await supabase.auth.signOut();
-            window.location.reload();
           }
         }
       })();
@@ -124,29 +133,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    setSubscriptionStatus('loading');
+    const subscriptionCheck = await checkSubscription(email);
 
-    if (error) return { error };
-
-    if (data.user?.email) {
-      const subscriptionCheck = await checkSubscription(data.user.email);
-
-      if (!subscriptionCheck.allowed) {
-        await supabase.auth.signOut();
-        return { error: null, subscriptionDenied: true };
-      }
+    if (!subscriptionCheck.allowed) {
+      setSubscriptionStatus('inactive');
+      return { error: null, subscriptionDenied: true };
     }
 
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      setSubscriptionStatus('unchecked');
+      return { error };
+    }
+
+    setSubscriptionStatus('active');
     return { error: null };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    setSubscriptionStatus('unchecked');
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, session, loading, signUp, signIn, signOut, checkSubscription }}>
+    <AuthContext.Provider value={{ user, profile, session, loading, subscriptionStatus, signUp, signIn, signOut, checkSubscription }}>
       {children}
     </AuthContext.Provider>
   );
