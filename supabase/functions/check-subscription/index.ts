@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import Stripe from "npm:stripe@17.7.0";
+import Stripe from "npm:stripe@^17.5.0";
 
 const ALLOWED_PRODUCT_IDS = [
   "prod_QoUqOoMexbgjc9",
@@ -43,7 +43,7 @@ interface SubscriptionData {
   customer_id: string;
 }
 
-async function getSubscriptionsFromStripe(stripe: Stripe, email: string): Promise<SubscriptionData[]> {
+async function getSkoolSubscriptions(stripe: Stripe, email: string): Promise<SubscriptionData[]> {
   try {
     const normalizedEmail = email.toLowerCase().trim();
     const customers = await stripe.customers.list({ email: normalizedEmail });
@@ -53,21 +53,17 @@ async function getSubscriptionsFromStripe(stripe: Stripe, email: string): Promis
       const subscriptions = await stripe.subscriptions.list({
         customer: customer.id,
         status: 'all',
-        expand: ['data.items.data.price.product'],
       });
 
       for (const subscription of subscriptions.data) {
         if (subscription.status === 'active' || subscription.status === 'trialing') {
           for (const item of subscription.items.data) {
-            const product = item.price.product as Stripe.Product;
-            const productId = typeof item.price.product === 'string'
-              ? item.price.product
-              : product.id;
+            const product = await stripe.products.retrieve(item.price.product as string);
 
             allSubscriptions.push({
               status: subscription.status,
-              product_title: typeof product === 'object' ? product.name : '',
-              product_id: productId,
+              product_title: product.name,
+              product_id: item.price.product as string,
               subscription_id: subscription.id,
               current_period_end: subscription.current_period_end,
               billing_interval: item.price.recurring?.interval || 'one_time',
@@ -80,14 +76,16 @@ async function getSubscriptionsFromStripe(stripe: Stripe, email: string): Promis
 
     return allSubscriptions;
   } catch (error) {
-    console.error('getSubscriptionsFromStripe error:', error);
+    console.error('getSkoolSubscriptions error:', error);
     return [];
   }
 }
 
-function findAllowedSubscription(subscriptions: SubscriptionData[]): { allowed: boolean; subscription?: SubscriptionData } {
-  const matchingSubscription = subscriptions.find(sub =>
-    ALLOWED_PRODUCT_IDS.includes(sub.product_id)
+function isAllowedToAccessRemixer(subscriptions: SubscriptionData[]): { allowed: boolean; subscription?: SubscriptionData } {
+  const validProductIds = ALLOWED_PRODUCT_IDS;
+  
+  const matchingSubscription = subscriptions.find(sub => 
+    validProductIds.includes(sub.product_id)
   );
 
   return {
@@ -106,7 +104,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-
+    
     if (!stripeSecretKey) {
       console.error("STRIPE_SECRET_KEY not configured");
       return new Response(
@@ -134,19 +132,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log(`Checking subscription for email: ${email}`);
-
-    const subscriptions = await getSubscriptionsFromStripe(stripe, email);
-
-    console.log(`Found ${subscriptions.length} active subscriptions`);
-    subscriptions.forEach(sub => {
-      console.log(`- Product ID: ${sub.product_id}, Status: ${sub.status}`);
-    });
-
-    const accessCheck = findAllowedSubscription(subscriptions);
+    const subscriptions = await getSkoolSubscriptions(stripe, email);
+    const accessCheck = isAllowedToAccessRemixer(subscriptions);
 
     if (accessCheck.allowed && accessCheck.subscription) {
-      console.log(`Access granted for product: ${accessCheck.subscription.product_id}`);
       return new Response(
         JSON.stringify({
           allowed: true,
@@ -167,7 +156,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log(`Access denied - no matching product IDs found`);
     return new Response(
       JSON.stringify({ allowed: false } as SubscriptionCheckResponse),
       {
