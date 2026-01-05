@@ -16,7 +16,7 @@ export function SignupForm() {
     setMessage(null);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.c({
         email,
         password,
       });
