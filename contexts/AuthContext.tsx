@@ -134,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (error) return { error };
 
+    return { error: error };
   };
 
   const signOut = async () => {
