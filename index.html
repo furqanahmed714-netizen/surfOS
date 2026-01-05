@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SurfOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Righteous&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              sand: {
+                50: '#fdfcf8',
+                100: '#fcfbf4',
+                200: '#f7f3e6',
+                300: '#efe6ce',
+                400: '#e4d2ae',
+                500: '#d7b889',
+                600: '#ca9e69',
+                700: '#a87f51',
+                800: '#896646',
+                900: '#71543d',
+              },
+              ocean: {
+                300: '#4fd1c5',
+                500: '#0d9488',
+                700: '#0f766e',
+              }
+            },
+            fontFamily: {
+              mono: ['"Courier New"', 'Courier', 'monospace'],
+              retro: ['"Righteous"', 'cursive'],
+              pixel: ['"Press Start 2P"', 'cursive'],
+            },
+            animation: {
+              'float': 'float 6s ease-in-out infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #E8E0D5;
+        background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d7b889' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+      }
+      .iso-container {
+        transform: rotateX(60deg) rotateZ(-45deg);
+        transform-style: preserve-3d;
+      }
+      .iso-block {
+        transform-style: preserve-3d;
+        transition: transform 0.3s ease;
+      }
+      .iso-block:hover {
+        transform: translateZ(20px);
+      }
+      .face {
+        position: absolute;
+        backface-visibility: hidden;
+      }
+      .face-top { transform: rotateY(0deg) translateZ(50px); }
+      .face-front { transform: rotateX(-90deg) translateZ(50px); }
+      .face-right { transform: rotateY(90deg) translateZ(50px); }
+
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #efe6ce;
+        border: 1px solid #896646;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #ca9e69;
+        border: 1px solid #896646;
+      }
+    </style>
+  </head>
+  <body class="overflow-hidden font-mono text-sand-900 selection:bg-ocean-300 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sand-50: #fefdf8;
+  --color-sand-100: #fdf9ed;
+  --color-sand-200: #f5f0dc;
+  --color-sand-300: #ebe4c7;
+  --color-sand-400: #d4cba8;
+  --color-sand-500: #bdb189;
+  --color-sand-600: #9a8f6a;
+  --color-sand-700: #7a7254;
+  --color-sand-800: #5c5640;
+  --color-sand-900: #3d3a2b;
+
+  --color-ocean-50: #e6f7fa;
+  --color-ocean-100: #cceff5;
+  --color-ocean-200: #99dfeb;
+  --color-ocean-300: #66cfe0;
+  --color-ocean-400: #33bfd6;
+  --color-ocean-500: #00afcc;
+  --color-ocean-600: #008ca3;
+  --color-ocean-700: #00697a;
+  --color-ocean-800: #004652;
+  --color-ocean-900: #002329;
+
+  --color-teal-50: #e6faf5;
+  --color-teal-100: #ccf5eb;
+  --color-teal-200: #99ebd7;
+  --color-teal-300: #66e0c3;
+  --color-teal-400: #33d6af;
+  --color-teal-500: #00cc9b;
+  --color-teal-600: #00a37c;
+  --color-teal-700: #007a5d;
+  --color-teal-800: #00523e;
+  --color-teal-900: #00291f;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f5f0dc;
+}
