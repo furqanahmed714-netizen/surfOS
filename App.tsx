@@ -7,7 +7,6 @@ import { MemeBuilder } from './components/MemeBuilder';
 import { SurfCenterpiece } from './components/SurfCenterpiece';
 import { RetroLoginScreen } from './components/RetroLoginScreen';
 import { FeedbackApp } from './components/FeedbackApp';
-import { BlockedAccess } from './components/BlockedAccess';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { WindowState, AppId } from './types';
 
@@ -70,11 +69,11 @@ const ICONS = {
 };
 
 const Desktop: React.FC = () => {
-  const { user, profile, loading, subscriptionStatus, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [topZIndex, setTopZIndex] = useState(100);
 
-  if (loading || subscriptionStatus === 'loading') {
+  if (loading) {
     return (
       <div className="fixed inset-0 bg-[#1a1a2e] flex items-center justify-center">
         <div className="text-center">
@@ -87,10 +86,6 @@ const Desktop: React.FC = () => {
 
   if (!user) {
     return <RetroLoginScreen />;
-  }
-
-  if (subscriptionStatus === 'inactive') {
-    return <BlockedAccess />;
   }
 
   const openApp = (appId: AppId) => {
