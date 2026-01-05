@@ -13,8 +13,8 @@ export const RetroLoginScreen: React.FC = () => {
   const [bootSequence, setBootSequence] = useState(true);
   const [bootText, setBootText] = useState<string[]>([]);
   // const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
+  const { signIn, signUp ,subscriptionBlocked } = useAuth();
 
-  const { signIn, signUp, subscriptionStatus } = useAuth();
   const bootMessages = [
     'SURFOS BIOS v1.0',
     'Copyright (c) 2024 Beach Technologies Inc.',
@@ -55,7 +55,7 @@ export const RetroLoginScreen: React.FC = () => {
       const { error, subscriptionDenied } = await signIn(email, password);
       
       if (subscriptionDenied) {
-        setSubscriptionBlocked(true);
+        // setSubscriptionBlocked(true);
         console.log(error,subscriptionDenied);
         setLoading(false);
         return;
@@ -71,7 +71,7 @@ export const RetroLoginScreen: React.FC = () => {
       }
       const { error, subscriptionDenied } = await signUp(email, password, firstName.trim(), lastName.trim());
       if (subscriptionDenied) {
-        setSubscriptionBlocked(true);
+        // setSubscriptionBlocked(true);
         setLoading(false);
         return;
       }
