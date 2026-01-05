@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
 
     if (data.user?.email) {
-      const subscriptionCheck = await checkSubscription(data.user.email);
+      const subscriptionCheck = await checkSubscription(email);
 
       if (!subscriptionCheck.allowed) {
         return { error: null, subscriptionDenied: true };
