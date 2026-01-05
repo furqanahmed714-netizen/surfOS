@@ -46,16 +46,26 @@ export const BlockedAccess: React.FC = () => {
                 <h1 className="text-3xl font-bold text-red-400 mb-2" style={{ textShadow: '0 0 20px rgba(239, 68, 68, 0.5)' }}>
                   ACCESS DENIED
                 </h1>
+                <div className="text-[#39d353] text-sm mb-6" style={{ textShadow: '0 0 10px rgba(57, 211, 83, 0.5)' }}>
+                  <div>{'>'} Scanning authorization credentials...</div>
+                  <div>{'>'} Checking subscription status...</div>
+                  <div className="text-red-400">{'>'} ERROR: No active subscription found</div>
+                </div>
               </div>
+
               <div className="bg-red-500/5 border border-red-500/30 rounded p-6 mb-6">
                 <h2 className="text-red-300 font-semibold mb-3 text-lg">Subscription Required</h2>
                 <p className="text-[#8b949e] leading-relaxed mb-4">
-                  You need an active AI surfer subscription to access remixer. If you know you have one, make sure to check if you're using the correct email. Email must be the same as your AI surfer membership.
+                  You don't have an active subscription. Access to SurfOS requires a valid subscription with an active or trialing status.
                 </p>
                 <div className="space-y-2 text-sm text-[#8b949e]">
                   <div className="flex items-start gap-2">
                     <span className="text-red-400 mt-0.5">•</span>
-                    <span>Ensure your Skool subscription is active or in trial period</span>
+                    <span>Ensure your Stripe subscription is active or in trial period</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-red-400 mt-0.5">•</span>
+                    <span>Verify your subscription includes an authorized product</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-red-400 mt-0.5">•</span>
@@ -65,14 +75,28 @@ export const BlockedAccess: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
+                <a
+                  href="https://billing.stripe.com/p/login"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-3 px-4 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/50 text-teal-300 font-semibold rounded transition-all text-center"
+                >
+                  Manage Subscription
+                </a>
                 <button
                   onClick={() => window.location.reload()}
                   className="flex-1 py-3 px-4 bg-[#161b22] hover:bg-[#1c2128] border border-[#30363d] text-[#8b949e] hover:text-white font-semibold rounded transition-all"
                 >
-                 Go Back
+                  Retry Access
                 </button>
               </div>
             </div>
+          </div>
+
+          <div className="mt-8 flex items-center justify-center gap-6 text-[#8b949e]/50 text-xs">
+            <span>~ SUBSCRIPTION REQUIRED ~</span>
+            <span className="w-1 h-1 bg-red-500 rounded-full" />
+            <span>SECURE VALIDATION</span>
           </div>
         </div>
       </div>

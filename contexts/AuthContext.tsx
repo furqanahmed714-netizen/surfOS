@@ -128,20 +128,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (error) return { error };
 
-    if (data.user) {
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', data.user.id)
-        .maybeSingle();
+    if (data.user?.email) {
+      const subscriptionCheck = await checkSubscription(data.user.email);
 
-      if (profileData && data.user.email) {
-        const subscriptionCheck = await checkSubscription(data.user.email);
-
-        if (!subscriptionCheck.allowed) {
-          await supabase.auth.signOut();
-          return { error: null, subscriptionDenied: true };
-        }
+      if (!subscriptionCheck.allowed) {
+        await supabase.auth.signOut();
+        return { error: null, subscriptionDenied: true };
       }
     }
 
