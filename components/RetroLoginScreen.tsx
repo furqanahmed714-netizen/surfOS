@@ -13,8 +13,8 @@ export const RetroLoginScreen: React.FC = () => {
   const [bootSequence, setBootSequence] = useState(true);
   const [bootText, setBootText] = useState<string[]>([]);
   // const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
-  const { signIn, signUp ,subscriptionBlocked } = useAuth();
 
+  const { signIn, signUp, subscriptionStatus } = useAuth();
   const bootMessages = [
     'SURFOS BIOS v1.0',
     'Copyright (c) 2024 Beach Technologies Inc.',
