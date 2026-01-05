@@ -1,5 +1,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import Stripe from "npm:stripe@17.7.0";
+
+const ALLOWED_PRODUCT_IDS = [
+  "prod_QoUqOoMexbgjc9",
+  "prod_QuWyNV1zUMs1h4",
+  "prod_QoUnoBGoREDINw",
+  "prod_QmCbTZPv52uu40",
+  "prod_T1dPbxEjnMkFzY"
+];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,12 +23,77 @@ interface SubscriptionCheckResponse {
   allowed: boolean;
   subscription_details?: {
     customer_id: string;
-    subscription_id: string | null;
+    subscription_id: string;
     status: string;
-    price_id: string | null;
-    current_period_end: number | null;
+    product_id: string;
+    product_title: string;
+    current_period_end: number;
+    billing_interval: string;
   };
   error?: string;
+}
+
+interface SubscriptionData {
+  status: string;
+  product_title: string;
+  product_id: string;
+  subscription_id: string;
+  current_period_end: number;
+  billing_interval: string;
+  customer_id: string;
+}
+
+async function getSubscriptionsFromStripe(stripe: Stripe, email: string): Promise<SubscriptionData[]> {
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+    const customers = await stripe.customers.list({ email: normalizedEmail });
+    const allSubscriptions: SubscriptionData[] = [];
+
+    for (const customer of customers.data) {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: 'all',
+        expand: ['data.items.data.price.product'],
+      });
+
+      for (const subscription of subscriptions.data) {
+        if (subscription.status === 'active' || subscription.status === 'trialing') {
+          for (const item of subscription.items.data) {
+            const product = item.price.product as Stripe.Product;
+            const productId = typeof item.price.product === 'string'
+              ? item.price.product
+              : product.id;
+
+            allSubscriptions.push({
+              status: subscription.status,
+              product_title: typeof product === 'object' ? product.name : '',
+              product_id: productId,
+              subscription_id: subscription.id,
+              current_period_end: subscription.current_period_end,
+              billing_interval: item.price.recurring?.interval || 'one_time',
+              customer_id: customer.id,
+            });
+          }
+        }
+      }
+    }
+
+    return allSubscriptions;
+  } catch (error) {
+    console.error('getSubscriptionsFromStripe error:', error);
+    return [];
+  }
+}
+
+function findAllowedSubscription(subscriptions: SubscriptionData[]): { allowed: boolean; subscription?: SubscriptionData } {
+  const matchingSubscription = subscriptions.find(sub =>
+    ALLOWED_PRODUCT_IDS.includes(sub.product_id)
+  );
+
+  return {
+    allowed: !!matchingSubscription,
+    subscription: matchingSubscription,
+  };
 }
 
 Deno.serve(async (req: Request) => {
@@ -32,13 +105,12 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
 
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("Supabase not configured");
+    if (!stripeSecretKey) {
+      console.error("STRIPE_SECRET_KEY not configured");
       return new Response(
-        JSON.stringify({ allowed: false, error: "Service not configured" } as SubscriptionCheckResponse),
+        JSON.stringify({ allowed: false, error: "Stripe not configured" } as SubscriptionCheckResponse),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -46,7 +118,9 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: '2024-12-18.acacia',
+    });
 
     const { email }: SubscriptionCheckRequest = await req.json();
 
@@ -60,101 +134,30 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    console.log(`Checking subscription for email: ${email}`);
 
-    const { data: user, error: userError } = await supabase.auth.admin.listUsers();
+    const subscriptions = await getSubscriptionsFromStripe(stripe, email);
 
-    if (userError) {
-      console.error("Error fetching users:", userError);
-      return new Response(
-        JSON.stringify({ allowed: false, error: "Failed to fetch user" } as SubscriptionCheckResponse),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+    console.log(`Found ${subscriptions.length} active subscriptions`);
+    subscriptions.forEach(sub => {
+      console.log(`- Product ID: ${sub.product_id}, Status: ${sub.status}`);
+    });
 
-    const foundUser = user.users.find(u => u.email?.toLowerCase() === normalizedEmail);
+    const accessCheck = findAllowedSubscription(subscriptions);
 
-    if (!foundUser) {
-      return new Response(
-        JSON.stringify({ allowed: false, error: "User not found" } as SubscriptionCheckResponse),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const { data: customer, error: customerError } = await supabase
-      .from('stripe_customers')
-      .select('customer_id')
-      .eq('user_id', foundUser.id)
-      .is('deleted_at', null)
-      .maybeSingle();
-
-    if (customerError) {
-      console.error("Error fetching customer:", customerError);
-      return new Response(
-        JSON.stringify({ allowed: false, error: "Failed to fetch customer data" } as SubscriptionCheckResponse),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    if (!customer) {
-      return new Response(
-        JSON.stringify({ allowed: false } as SubscriptionCheckResponse),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const { data: subscription, error: subscriptionError } = await supabase
-      .from('stripe_subscriptions')
-      .select('*')
-      .eq('customer_id', customer.customer_id)
-      .is('deleted_at', null)
-      .maybeSingle();
-
-    if (subscriptionError) {
-      console.error("Error fetching subscription:", subscriptionError);
-      return new Response(
-        JSON.stringify({ allowed: false, error: "Failed to fetch subscription data" } as SubscriptionCheckResponse),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    if (!subscription) {
-      return new Response(
-        JSON.stringify({ allowed: false } as SubscriptionCheckResponse),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const isActive = subscription.status === 'active' || subscription.status === 'trialing';
-
-    if (isActive) {
+    if (accessCheck.allowed && accessCheck.subscription) {
+      console.log(`Access granted for product: ${accessCheck.subscription.product_id}`);
       return new Response(
         JSON.stringify({
           allowed: true,
           subscription_details: {
-            customer_id: subscription.customer_id,
-            subscription_id: subscription.subscription_id,
-            status: subscription.status,
-            price_id: subscription.price_id,
-            current_period_end: subscription.current_period_end,
+            customer_id: accessCheck.subscription.customer_id,
+            subscription_id: accessCheck.subscription.subscription_id,
+            status: accessCheck.subscription.status,
+            product_id: accessCheck.subscription.product_id,
+            product_title: accessCheck.subscription.product_title,
+            current_period_end: accessCheck.subscription.current_period_end,
+            billing_interval: accessCheck.subscription.billing_interval,
           },
         } as SubscriptionCheckResponse),
         {
@@ -164,6 +167,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    console.log(`Access denied - no matching product IDs found`);
     return new Response(
       JSON.stringify({ allowed: false } as SubscriptionCheckResponse),
       {
