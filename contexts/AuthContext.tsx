@@ -91,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const data: SubscriptionCheckResponse = await response.json();
       return data;
+      console.log(data);
     } catch (error) {
       console.error('Subscription check error:', error);
       return { allowed: false, error: 'Failed to check subscription' };
