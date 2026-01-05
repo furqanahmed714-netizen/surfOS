@@ -47,20 +47,15 @@ export const BlockedAccess: React.FC = () => {
                   ACCESS DENIED
                 </h1>
               </div>
-
               <div className="bg-red-500/5 border border-red-500/30 rounded p-6 mb-6">
                 <h2 className="text-red-300 font-semibold mb-3 text-lg">Subscription Required</h2>
                 <p className="text-[#8b949e] leading-relaxed mb-4">
-                  You don't have an active subscription. Access to SurfOS requires a valid subscription with an active or trialing status.
+                  You need an active AI surfer subscription to access remixer. If you know you have one, make sure to check if you're using the correct email. Email must be the same as your AI surfer membership.
                 </p>
                 <div className="space-y-2 text-sm text-[#8b949e]">
                   <div className="flex items-start gap-2">
                     <span className="text-red-400 mt-0.5">•</span>
                     <span>Ensure your Stripe subscription is active or in trial period</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-red-400 mt-0.5">•</span>
-                    <span>Verify your subscription includes an authorized product</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-red-400 mt-0.5">•</span>
