@@ -3,12 +3,9 @@ import Stripe from 'npm:stripe@17.7.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
-const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
+const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 const stripe = new Stripe(stripeSecret, {
-  appInfo: {
-    name: 'Bolt Integration',
-    version: '1.0.0',
-  },
+  apiVersion: '2024-12-18.acacia',
 });
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
@@ -22,6 +19,12 @@ Deno.serve(async (req) => {
 
     if (req.method !== 'POST') {
       return new Response('Method not allowed', { status: 405 });
+    }
+
+    // Check if webhook secret is configured
+    if (!stripeWebhookSecret) {
+      console.error('STRIPE_WEBHOOK_SECRET not configured');
+      return new Response('Webhook not configured', { status: 503 });
     }
 
     // get the signature from the header
