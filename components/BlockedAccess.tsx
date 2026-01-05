@@ -55,7 +55,7 @@ export const BlockedAccess: React.FC = () => {
                 <div className="space-y-2 text-sm text-[#8b949e]">
                   <div className="flex items-start gap-2">
                     <span className="text-red-400 mt-0.5">•</span>
-                    <span>Ensure your Stripe subscription is active or in trial period</span>
+                    <span>Ensure your Skool subscription is active or in trial period</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-red-400 mt-0.5">•</span>
