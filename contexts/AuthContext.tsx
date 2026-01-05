@@ -129,8 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!subscriptionCheck.allowed) {
         return { error: null, subscriptionDenied: true };
       }
-    const { data, error } = await supabase.auth.signInWithPassword({ email,   
-
+    const { data, error } = await supabase.auth.signInWithPassword({ email,  password});
     if (error) return { error };
 
   };
