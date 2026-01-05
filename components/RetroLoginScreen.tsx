@@ -264,7 +264,7 @@ export const RetroLoginScreen: React.FC = () => {
           <span className="w-1 h-1 bg-teal-500 rounded-full" />
           <span>SECURE CONNECTION</span>
           <span className="w-1 h-1 bg-teal-500 rounded-full" />
-          <span>v1.0.0</span>
+          <span>v1.0.0s</span>
         </div>
       </div>
 
