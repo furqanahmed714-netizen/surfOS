@@ -16,6 +16,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const WHITELISTED_EMAILS = [
+  'admin@example.com',
+  'test@example.com',
+];
+
+const isWhitelistedEmail = (email: string): boolean => {
+  return WHITELISTED_EMAILS.includes(email.toLowerCase());
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -56,8 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const periodicSubscriptionCheck = setInterval(() => {
       (async () => {
         const currentSession = await supabase.auth.getSession();
-        if (currentSession.data.session?.user?.email) {
-          const subscriptionCheck = await checkSubscription(currentSession.data.session.user.email);
+        const userEmail = currentSession.data.session?.user?.email;
+        if (userEmail && !isWhitelistedEmail(userEmail)) {
+          const subscriptionCheck = await checkSubscription(userEmail);
           if (!subscriptionCheck.allowed) {
             await supabase.auth.signOut();
             window.location.reload();
@@ -98,10 +108,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
-    const subscriptionCheck = await checkSubscription(email);
-
-    if (!subscriptionCheck.allowed) {
-      return { error: null, subscriptionDenied: true };
+    if (!isWhitelistedEmail(email)) {
+      const subscriptionCheck = await checkSubscription(email);
+      if (!subscriptionCheck.allowed) {
+        return { error: null, subscriptionDenied: true };
+      }
     }
 
     const { data, error } = await supabase.auth.signUp({ email, password });
@@ -124,12 +135,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    const subscriptionCheck = await checkSubscription(email);
-
+    if (!isWhitelistedEmail(email)) {
+      const subscriptionCheck = await checkSubscription(email);
       if (!subscriptionCheck.allowed) {
         return { error: null, subscriptionDenied: true };
       }
-    
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) return { error };
