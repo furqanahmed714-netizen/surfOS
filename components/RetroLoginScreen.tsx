@@ -55,7 +55,7 @@ export const RetroLoginScreen: React.FC = () => {
       const { error, subscriptionDenied } = await signIn(email, password);
       
       if (subscriptionDenied) {
-        // setSubscriptionBlocked(true);
+        setSubscriptionBlocked(true);
         console.log(error,subscriptionDenied);
         setLoading(false);
         return;
@@ -71,7 +71,7 @@ export const RetroLoginScreen: React.FC = () => {
       }
       const { error, subscriptionDenied } = await signUp(email, password, firstName.trim(), lastName.trim());
       if (subscriptionDenied) {
-        // setSubscriptionBlocked(true);
+        setSubscriptionBlocked(true);
         setLoading(false);
         return;
       }
