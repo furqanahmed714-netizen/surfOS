@@ -53,6 +53,7 @@ export const RetroLoginScreen: React.FC = () => {
 
     if (isLogin) {
       const { error, subscriptionDenied } = await signIn(email, password);
+      console.log(error,subscriptionDenied);
       if (subscriptionDenied) {
         setSubscriptionBlocked(true);
         setLoading(false);
