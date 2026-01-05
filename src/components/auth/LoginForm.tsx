@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
+import { BlockedAccess } from '../../../components/BlockedAccess';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [showBlockedAccess, setShowBlockedAccess] = useState(false);
+  const { signIn } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,13 +17,12 @@ export function LoginForm() {
     setMessage(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const result = await signIn(email, password);
 
-      if (error) {
-        setMessage({ type: 'error', text: error.message });
+      if (result.subscriptionDenied) {
+        setShowBlockedAccess(true);
+      } else if (result.error) {
+        setMessage({ type: 'error', text: result.error.message });
       } else {
         setMessage({ type: 'success', text: 'Successfully logged in!' });
       }
@@ -30,6 +32,10 @@ export function LoginForm() {
       setLoading(false);
     }
   };
+
+  if (showBlockedAccess) {
+    return <BlockedAccess />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

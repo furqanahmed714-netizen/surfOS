@@ -7,11 +7,9 @@ import { SignupPage } from './pages/SignupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { SuccessPage } from './pages/SuccessPage';
-import { GamesPage } from './pages/GamesPage';
-import { FeedbackPage } from './pages/FeedbackPage';
-import { useAuth } from './hooks/useAuth';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
-function App() {
+function AppContent() {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -33,11 +31,17 @@ function App() {
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
           <Route path="/success" element={<ProtectedRoute><SuccessPage /></ProtectedRoute>} />
-          <Route path="/games" element={<ProtectedRoute><GamesPage /></ProtectedRoute>} />
-          <Route path="/feedback" element={<ProtectedRoute><FeedbackPage /></ProtectedRoute>} />
         </Routes>
       </div>
     </Router>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
