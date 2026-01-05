@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { BlockedAccess } from './BlockedAccess';
 
 export const RetroLoginScreen: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,6 +12,7 @@ export const RetroLoginScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [bootSequence, setBootSequence] = useState(true);
   const [bootText, setBootText] = useState<string[]>([]);
+  const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
   const { signIn, signUp } = useAuth();
 
   const bootMessages = [
@@ -50,7 +52,12 @@ export const RetroLoginScreen: React.FC = () => {
     setLoading(true);
 
     if (isLogin) {
-      const { error } = await signIn(email, password);
+      const { error, subscriptionDenied } = await signIn(email, password);
+      if (subscriptionDenied) {
+        setSubscriptionBlocked(true);
+        setLoading(false);
+        return;
+      }
       if (error) {
         setError(error.message);
       }
@@ -60,13 +67,22 @@ export const RetroLoginScreen: React.FC = () => {
         setLoading(false);
         return;
       }
-      const { error } = await signUp(email, password, firstName.trim(), lastName.trim());
+      const { error, subscriptionDenied } = await signUp(email, password, firstName.trim(), lastName.trim());
+      if (subscriptionDenied) {
+        setSubscriptionBlocked(true);
+        setLoading(false);
+        return;
+      }
       if (error) {
         setError(error.message);
       }
     }
     setLoading(false);
   };
+
+  if (subscriptionBlocked) {
+    return <BlockedAccess />;
+  }
 
   return (
     <div className="fixed inset-0 bg-[#1a1a2e] overflow-hidden">

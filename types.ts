@@ -27,3 +27,16 @@ export interface IconProps {
   icon: ReactNode;
   onClick: () => void;
 }
+
+export interface SubscriptionDetails {
+  customer_id: string;
+  subscription_id: string;
+  status: string;
+  product_id: string;
+}
+
+export interface SubscriptionCheckResponse {
+  allowed: boolean;
+  subscription_details?: SubscriptionDetails;
+  error?: string;
+}
