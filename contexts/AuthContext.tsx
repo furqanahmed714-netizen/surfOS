@@ -124,19 +124,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-      const subscriptionCheck = await checkSubscription(email);
+      
+    const subscriptionCheck = await checkSubscription(email);
 
       if (!subscriptionCheck.allowed) {
         await supabase.auth.signOut();
         return { error: null, subscriptionDenied: true };
       }
+    
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
     if (error) return { error };
 
-   
-
-    return { error: null };
   };
 
   const signOut = async () => {
