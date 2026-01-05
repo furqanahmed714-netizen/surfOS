@@ -69,7 +69,7 @@ export const BlockedAccess: React.FC = () => {
                   onClick={() => window.location.reload()}
                   className="flex-1 py-3 px-4 bg-[#161b22] hover:bg-[#1c2128] border border-[#30363d] text-[#8b949e] hover:text-white font-semibold rounded transition-all"
                 >
-                  Retry Access
+                 Go Back
                 </button>
               </div>
             </div>
