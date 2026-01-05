@@ -1,9 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ALLOWED_PRODUCT_IDS = [
-  "prod_XXXX",
-  "prod_YYYY",
-  "prod_ZZZZ"
+  "prod_QoUqOoMexbgjc9",
+  "prod_QuWyNV1zUMs1h4",
+  "prod_QoUnoBGoREDINw",
+  "prod_QmCbTZPv52uu40",
+  "prod_T1dPbxEjnMkFzY"
 ];
 
 const corsHeaders = {
