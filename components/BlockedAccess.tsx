@@ -74,12 +74,6 @@ export const BlockedAccess: React.FC = () => {
               </div>
             </div>
           </div>
-
-          <div className="mt-8 flex items-center justify-center gap-6 text-[#8b949e]/50 text-xs">
-            <span>~ SUBSCRIPTION REQUIRED ~</span>
-            <span className="w-1 h-1 bg-red-500 rounded-full" />
-            <span>SECURE VALIDATION</span>
-          </div>
         </div>
       </div>
 
